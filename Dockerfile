@@ -25,7 +25,7 @@ FROM composer:2 AS composer-builder
 
 WORKDIR /app
 
-COPY composer.json ./
+COPY composer.json composer.lock* ./
 
 RUN composer install \
     --no-dev \
@@ -45,6 +45,8 @@ RUN composer dump-autoload --optimize --no-dev
 FROM php:8.4-fpm-alpine
 
 # Install system dependencies
+# Install system dependencies
+# Install system dependencies
 RUN apk add --no-cache \
     nginx \
     supervisor \
@@ -55,17 +57,17 @@ RUN apk add --no-cache \
     libzip-dev \
     oniguruma-dev \
     icu-dev \
+    postgresql-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install \
-        pdo_mysql \
-        mbstring \
-        exif \
-        pcntl \
-        bcmath \
-        gd \
-        zip \
-        intl \
-        opcache \
+    pdo_pgsql \
+    pdo_mysql \
+    mbstring \
+    zip \
+    bcmath \
+    gd \
+    intl \
+    opcache \
     && rm -rf /var/cache/apk/*
 
 # Configure OPcache for production
@@ -98,38 +100,38 @@ COPY --from=node-builder /app/public/build /var/www/html/public/build
 # Nginx configuration
 RUN cat > /etc/nginx/http.d/default.conf << 'EOF'
 server {
-    listen 80;
-    server_name _;
-    root /var/www/html/public;
-    index index.php;
+listen 80;
+server_name _;
+root /var/www/html/public;
+index index.php;
 
-    client_max_body_size 64M;
+client_max_body_size 64M;
 
-    # Gzip compression
-    gzip on;
-    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
-    gzip_min_length 256;
+# Gzip compression
+gzip on;
+gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
+gzip_min_length 256;
 
-    location / {
-        try_files $uri $uri/ /index.php?$query_string;
-    }
+location / {
+try_files $uri $uri/ /index.php?$query_string;
+}
 
-    location ~ \.php$ {
-        fastcgi_pass 127.0.0.1:9000;
-        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
-        include fastcgi_params;
-        fastcgi_read_timeout 600;
-    }
+location ~ \.php$ {
+fastcgi_pass 127.0.0.1:9000;
+fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+include fastcgi_params;
+fastcgi_read_timeout 600;
+}
 
-    location ~ /\.(?!well-known).* {
-        deny all;
-    }
+location ~ /\.(?!well-known).* {
+deny all;
+}
 
-    # Cache static assets
-    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
-        expires 30d;
-        add_header Cache-Control "public, immutable";
-    }
+# Cache static assets
+location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+expires 30d;
+add_header Cache-Control "public, immutable";
+}
 }
 EOF
 
