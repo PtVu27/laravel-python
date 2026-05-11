@@ -25,13 +25,14 @@ FROM composer:2 AS composer-builder
 
 WORKDIR /app
 
-COPY composer.json composer.lock ./
+COPY composer.json ./
 
 RUN composer install \
     --no-dev \
     --no-scripts \
     --no-autoloader \
     --prefer-dist \
+    --no-interaction \
     --ignore-platform-reqs
 
 COPY . .
@@ -161,7 +162,7 @@ EOF
 
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
-    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
+    && chmod -R 777 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Copy entrypoint script
 COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh

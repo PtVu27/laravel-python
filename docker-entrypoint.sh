@@ -21,13 +21,23 @@ fi
 
 # Create storage directories if missing
 echo "📁 Ensuring storage directories exist..."
-mkdir -p storage/framework/{cache,sessions,views}
+mkdir -p storage/framework/cache/data
+mkdir -p storage/framework/sessions
+mkdir -p storage/framework/views
 mkdir -p storage/logs
 mkdir -p bootstrap/cache
 
-# Set permissions
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R 775 storage bootstrap/cache
+# ======================================
+# FIX 500 ERROR: Permission + Cache
+# ======================================
+
+# 1. Force full permissions (fix permission denied errors)
+echo "🔓 Setting permissions (chmod 777)..."
+chmod -R 777 storage bootstrap/cache
+
+# 2. Clear ALL cached config/routes/views (fix stale cache 500 errors)
+echo "🧹 Clearing all cached configuration..."
+php artisan optimize:clear 2>/dev/null || true
 
 # Create storage link
 echo "🔗 Creating storage link..."
@@ -37,11 +47,14 @@ php artisan storage:link --force 2>/dev/null || true
 echo "🗃️ Running database migrations..."
 php artisan migrate --force 2>/dev/null || echo "⚠️ Migration failed - database may not be available yet"
 
-# Cache configuration for production
+# Re-cache configuration for production (after clearing)
 echo "⚡ Optimizing for production..."
 php artisan config:cache 2>/dev/null || true
 php artisan route:cache 2>/dev/null || true
 php artisan view:cache 2>/dev/null || true
+
+# Ensure permissions again after caching
+chmod -R 777 storage bootstrap/cache
 
 # Update Nginx port if PORT env is set (Render requirement)
 if [ -n "$PORT" ]; then
