@@ -14,6 +14,10 @@ php artisan view:cache
 # Run migrations
 php artisan migrate --force
 
+# Cài đặt extension cho PostgreSQL
+RUN apt-get update && apt-get install -y libpq-dev \
+    && docker-php-ext-install pdo pdo_pgsql
+    
 # Fix storage permissions
 chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
