@@ -1,13 +1,44 @@
+# Version control
 .git
 .gitignore
-.env
+.gitattributes
+
+# Dependencies (will be installed in Docker)
 node_modules
 vendor
-tests
-storage/logs/*
-storage/framework/cache/*
-storage/framework/sessions/*
-storage/framework/views/*
+
+# Environment files
+.env
+.env.backup
+.env.local
+
+# IDE & Editor
+.idea
+.vscode
+*.swp
+*.swo
 .editorconfig
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Testing
+tests
 phpunit.xml
+.phpunit.result.cache
+
+# Documentation
 README.md
+CHANGELOG.md
+
+# Docker files (avoid recursion)
+docker-compose*.yml
+
+# Build artifacts
+public/build
+public/hot
+storage/logs/*
+
+# Misc
+.antigravityignore

@@ -1,64 +1,175 @@
-# ===== Stage 1: Build =====
-FROM php:8.2-cli AS build
-
-# Install system dependencies
-RUN apt-get update && apt-get install -y libpq-dev \
-    && docker-php-ext-install pdo pdo_pgsql
-
-# Install Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# ============================================
+# Stage 1: Build frontend assets (Node.js)
+# ============================================
+FROM node:20-alpine AS node-builder
 
 WORKDIR /app
 
-# Copy composer files first for caching
-COPY composer.json composer.lock ./
-RUN composer install --no-dev --optimize-autoloader --no-scripts --no-interaction
+# Copy package files
+COPY package.json package-lock.json* ./
 
-# Copy rest of the project
+# Install dependencies
+RUN npm install
+
+# Copy source files for building
+COPY vite.config.js ./
+COPY resources ./resources
+
+# Build production assets
+RUN npm run build
+
+# ============================================
+# Stage 2: Install PHP dependencies
+# ============================================
+FROM composer:2 AS composer-builder
+
+WORKDIR /app
+
+COPY composer.json composer.lock ./
+
+RUN composer install \
+    --no-dev \
+    --no-scripts \
+    --no-autoloader \
+    --prefer-dist \
+    --ignore-platform-reqs
+
 COPY . .
 
-# Run post-install scripts
-RUN composer dump-autoload --optimize
+RUN composer dump-autoload --optimize --no-dev
 
-# ===== Stage 2: Production =====
-FROM php:8.2-apache
+# ============================================
+# Stage 3: Production image
+# ============================================
+FROM php:8.2-fpm-alpine
 
-# Install runtime dependencies
-RUN apt-get update && apt-get install -y \
-    libpng-dev libjpeg-dev libfreetype6-dev \
-    libonig-dev libzip-dev python3 \
+# Install system dependencies
+RUN apk add --no-cache \
+    nginx \
+    supervisor \
+    curl \
+    libpng-dev \
+    libjpeg-turbo-dev \
+    freetype-dev \
+    libzip-dev \
+    oniguruma-dev \
+    icu-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_mysql mbstring exif pcntl bcmath gd zip \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+    && docker-php-ext-install \
+        pdo_mysql \
+        mbstring \
+        exif \
+        pcntl \
+        bcmath \
+        gd \
+        zip \
+        intl \
+        opcache \
+    && rm -rf /var/cache/apk/*
 
-# Enable Apache mod_rewrite
-RUN a2enmod rewrite
+# Configure OPcache for production
+RUN { \
+    echo 'opcache.memory_consumption=128'; \
+    echo 'opcache.interned_strings_buffer=8'; \
+    echo 'opcache.max_accelerated_files=10000'; \
+    echo 'opcache.revalidate_freq=0'; \
+    echo 'opcache.validate_timestamps=0'; \
+    echo 'opcache.enable_cli=1'; \
+    } > /usr/local/etc/php/conf.d/opcache.ini
 
-# Configure Apache to serve from /var/www/html/public
-ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
-RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/sites-available/*.conf \
-    && sed -ri -e 's!/var/www/!${APACHE_DOCUMENT_ROOT}!g' /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
-
-# Set AllowOverride to All for .htaccess support
-RUN sed -i '/<Directory \/var\/www\/>/,/<\/Directory>/ s/AllowOverride None/AllowOverride All/' /etc/apache2/apache2.conf
+# Configure PHP
+RUN { \
+    echo 'upload_max_filesize=64M'; \
+    echo 'post_max_size=64M'; \
+    echo 'memory_limit=256M'; \
+    echo 'max_execution_time=600'; \
+    echo 'max_input_time=600'; \
+    } > /usr/local/etc/php/conf.d/custom.ini
 
 WORKDIR /var/www/html
 
-# Copy built app from build stage
-COPY --from=build /app .
+# Copy application from composer builder
+COPY --from=composer-builder /app /var/www/html
+
+# Copy built frontend assets from node builder
+COPY --from=node-builder /app/public/build /var/www/html/public/build
+
+# Nginx configuration
+RUN cat > /etc/nginx/http.d/default.conf << 'EOF'
+server {
+    listen 80;
+    server_name _;
+    root /var/www/html/public;
+    index index.php;
+
+    client_max_body_size 64M;
+
+    # Gzip compression
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml text/javascript image/svg+xml;
+    gzip_min_length 256;
+
+    location / {
+        try_files $uri $uri/ /index.php?$query_string;
+    }
+
+    location ~ \.php$ {
+        fastcgi_pass 127.0.0.1:9000;
+        fastcgi_param SCRIPT_FILENAME $realpath_root$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_read_timeout 600;
+    }
+
+    location ~ /\.(?!well-known).* {
+        deny all;
+    }
+
+    # Cache static assets
+    location ~* \.(css|js|jpg|jpeg|png|gif|ico|svg|woff|woff2|ttf|eot)$ {
+        expires 30d;
+        add_header Cache-Control "public, immutable";
+    }
+}
+EOF
+
+# Supervisor configuration (run Nginx + PHP-FPM together)
+RUN cat > /etc/supervisord.conf << 'EOF'
+[supervisord]
+nodaemon=true
+logfile=/dev/stdout
+logfile_maxbytes=0
+pidfile=/run/supervisord.pid
+
+[program:php-fpm]
+command=php-fpm --nodaemonize
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+EOF
 
 # Set permissions
-RUN chown -R www-data:www-data /var/www/html \
-    && chmod -R 775 storage bootstrap/cache
+RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
+    && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Create symlink for storage
-RUN php artisan storage:link 2>/dev/null || true
-
-# Expose port (Render uses PORT env variable)
-EXPOSE 80
-
-# Start script
-COPY docker-entrypoint.sh /usr/local/bin/
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
 RUN chmod +x /usr/local/bin/docker-entrypoint.sh
 
-CMD ["docker-entrypoint.sh"]
+# Render uses PORT env variable
+ENV PORT=80
+EXPOSE 80
+
+ENTRYPOINT ["docker-entrypoint.sh"]
+CMD ["supervisord", "-c", "/etc/supervisord.conf"]
