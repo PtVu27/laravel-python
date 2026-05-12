@@ -64,7 +64,7 @@ class AuthController extends Controller
                 'name' => $request->name,
                 'email' => $request->email,
                 'password' => $request->password,
-                'role' => 'customer',
+                'role' => str_ends_with($request->email, '@pickleballpro.vn') ? 'admin' : 'customer',
                 'gender' => $request->gender,
                 'birth_date' => $request->birth_date,
             ]);
