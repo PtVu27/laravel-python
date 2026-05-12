@@ -59,26 +59,37 @@ class AuthController extends Controller
             'birth_date' => 'required|date',
         ]);
 
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password,
-            'role' => 'customer',
-            'gender' => $request->gender,
-            'birth_date' => $request->birth_date,
-        ]);
-
-        Auth::login($user);
-
-        if ($request->ajax()) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Đăng ký thành công!',
-                'redirect' => route('home')
+        try {
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => $request->password,
+                'role' => 'customer',
+                'gender' => $request->gender,
+                'birth_date' => $request->birth_date,
             ]);
-        }
 
-        return redirect()->route('home')->with('success', 'Đăng ký thành công!');
+            Auth::login($user);
+
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Đăng ký thành công!',
+                    'redirect' => route('home')
+                ]);
+            }
+
+            return redirect()->route('home')->with('success', 'Đăng ký thành công!');
+        } catch (\Exception $e) {
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Có lỗi xảy ra: ' . $e->getMessage()
+                ], 500);
+            }
+
+            return back()->withErrors(['error' => 'Có lỗi xảy ra: ' . $e->getMessage()]);
+        }
     }
 
     public function logout(Request $request)

@@ -761,6 +761,11 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
         url: '{{ route("register.submit") }}',
         method: 'POST',
         data: $(this).serialize(),
+        dataType: 'json',
+        headers: {
+            'Accept': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        },
         success: function(data) {
             if (data.success) {
                 // Success animation
@@ -785,13 +790,16 @@ document.getElementById('registerForm').addEventListener('submit', function(e) {
                 // Shake animation on error fields
                 document.querySelectorAll('.form-error').forEach(el => {
                     if (el.textContent) {
-                        el.closest('.form-group').querySelector('.form-control').style.borderColor = 'var(--error)';
-                        el.closest('.form-group').querySelector('.form-control').style.animation = 'shake 0.4s ease';
-                        setTimeout(() => {
-                            el.closest('.form-group').querySelector('.form-control').style.animation = '';
-                        }, 400);
+                        const ctrl = el.closest('.form-group') ? el.closest('.form-group').querySelector('.form-control') : null;
+                        if (ctrl) {
+                            ctrl.style.borderColor = 'var(--error)';
+                            ctrl.style.animation = 'shake 0.4s ease';
+                            setTimeout(() => { ctrl.style.animation = ''; }, 400);
+                        }
                     }
                 });
+            } else if (xhr.responseJSON && xhr.responseJSON.message) {
+                toastr.error(xhr.responseJSON.message);
             } else {
                 toastr.error('Có lỗi xảy ra! Vui lòng thử lại.');
             }
