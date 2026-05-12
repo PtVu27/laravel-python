@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         // Users
-        User::create(['email' => 'admin@pickleballpro.vn', 'password' => '123456', 'role' => 'admin']);
-        User::create(['email' => 'user@pickleballpro.vn', 'password' => '123456', 'role' => 'customer']);
+        User::create(['name' => 'Admin Pro', 'email' => 'admin@pickleballpro.vn', 'password' => '123456', 'role' => 'admin']);
+        User::create(['name' => 'Khách hàng mẫu', 'email' => 'user@pickleballpro.vn', 'password' => '123456', 'role' => 'customer']);
 
         // Categories
         $c1 = Category::create(['name' => 'Vợt Pickleball']);
