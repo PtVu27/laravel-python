@@ -41,8 +41,14 @@ Route::post('/register', [AuthController::class, 'register'])->name('register.su
 
 Route::get('/seed-admin', function () {
     try {
-        \Illuminate\Support\Facades\Artisan::call('db:seed', ['--force' => true]);
-        return 'Tạo tài khoản Admin thành công! Vui lòng quay lại trang đăng nhập.';
+        // Upgrade specific user to admin
+        $user = \App\Models\User::where('email', 'admin123@pickleballpro.vn')->first();
+        if ($user) {
+            $user->role = 'admin';
+            $user->save();
+            return 'Đã cấp quyền Admin cho tài khoản admin123@pickleballpro.vn thành công! Bạn hãy tải lại trang.';
+        }
+        return 'Không tìm thấy tài khoản admin123@pickleballpro.vn.';
     } catch (\Exception $e) {
         return 'Lỗi: ' . $e->getMessage();
     }
