@@ -65,6 +65,11 @@
                             <span>{{ auth()->user()->email }}</span>
                         </button>
                         <div class="user-dropdown" id="userDropdown">
+                            @if(auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.dashboard') }}" class="dropdown-item" style="color: var(--primary);">
+                                <i class="fas fa-chart-line"></i> Trang quản trị
+                            </a>
+                            @endif
                             <a href="{{ route('profile.edit') }}" class="dropdown-item">
                                 <i class="fas fa-user-edit"></i> Chỉnh sửa tài khoản
                             </a>
@@ -104,6 +109,11 @@
                 <i class="fas fa-shopping-cart"></i> Giỏ hàng
             </a>
             @auth
+                @if(auth()->user()->role === 'admin')
+                <a href="{{ route('admin.dashboard') }}" class="mobile-link" style="color: var(--primary);">
+                    <i class="fas fa-chart-line"></i> Trang quản trị
+                </a>
+                @endif
                 <a href="{{ route('orders.index') }}" class="mobile-link">
                     <i class="fas fa-box-open"></i> Đơn hàng của tôi
                 </a>
