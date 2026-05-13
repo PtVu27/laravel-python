@@ -28,7 +28,7 @@
                 <tr>
                     <td class="text-secondary fw-medium">SP{{ str_pad($product->id, 3, '0', STR_PAD_LEFT) }}</td>
                     <td class="fw-semibold">
-                        <img src="{{ $product->image }}" alt="" width="40" height="40" class="rounded me-2 object-fit-cover">
+                        <img src="{{ $product->image }}" alt="{{ $product->name }}" width="40" height="40" class="rounded me-2 object-fit-cover" onerror="this.onerror=null;this.src='https://ui-avatars.com/api/?name={{ urlencode($product->name) }}&size=40&background=e8f0fe&color=4285f4&font-size=0.35';">
                         {{ $product->name }}
                     </td>
                     <td>{{ number_format($product->price, 0, ',', '.') }} ₫</td>
