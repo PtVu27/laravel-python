@@ -54,6 +54,7 @@ class ProductController extends Controller
         ]);
 
         $data = $request->except('image');
+        $data['description'] = $data['description'] ?? '';
         
         if ($request->hasFile('image')) {
             $file = $request->file('image');
