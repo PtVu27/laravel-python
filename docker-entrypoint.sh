@@ -47,9 +47,15 @@ php artisan storage:link --force 2>/dev/null || true
 echo "🗃️ Running database migrations..."
 php artisan migrate --force 2>/dev/null || echo "⚠️ Migration failed - database may not be available yet"
 
-# Run seeders (Create admin account)
-echo "🌱 Seeding database..."
-php artisan db:seed --force 2>/dev/null || echo "⚠️ Seeding failed"
+# Run seeders only if database is empty (avoid duplicating data on restart)
+echo "🌱 Checking if seeding is needed..."
+USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null || echo "0")
+if [ "$USER_COUNT" = "0" ]; then
+    echo "🌱 Database is empty, seeding..."
+    php artisan db:seed --force 2>/dev/null || echo "⚠️ Seeding failed"
+else
+    echo "✅ Database already has data, skipping seed."
+fi
 
 # Re-cache configuration for production (after clearing)
 echo "⚡ Optimizing for production..."

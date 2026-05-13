@@ -97,7 +97,7 @@
                         <div class="col-lg-8">
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Tên sản phẩm</label>
-                                <input type="text" name="name" class="form-control form-control-lg fs-6" placeholder="Nhập tên sản phẩm...">
+                                <input type="text" name="name" class="form-control form-control-lg fs-6" placeholder="Nhập tên sản phẩm..." value="{{ old('name') }}">
                             </div>
                             <div class="row">
                                 <div class="col-md-4 mb-3">
@@ -105,22 +105,22 @@
                                     <select name="category_id" class="form-select form-select-lg fs-6">
                                         <option value="">Chọn danh mục</option>
                                         @foreach($categories as $cat)
-                                        <option value="{{ $cat->id }}">{{ $cat->name }}</option>
+                                        <option value="{{ $cat->id }}" {{ old('category_id') == $cat->id ? 'selected' : '' }}>{{ $cat->name }}</option>
                                         @endforeach
                                     </select>
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label fw-medium">Giá bán (VNĐ)</label>
-                                    <input type="number" name="price" class="form-control form-control-lg fs-6" placeholder="0">
+                                    <input type="number" name="price" class="form-control form-control-lg fs-6" placeholder="0" value="{{ old('price') }}">
                                 </div>
                                 <div class="col-md-4 mb-3">
                                     <label class="form-label fw-medium">Số lượng</label>
-                                    <input type="number" name="quantity" class="form-control form-control-lg fs-6" placeholder="0">
+                                    <input type="number" name="quantity" class="form-control form-control-lg fs-6" placeholder="0" value="{{ old('quantity') }}">
                                 </div>
                             </div>
                             <div class="mb-3">
                                 <label class="form-label fw-medium">Mô tả chi tiết</label>
-                                <textarea name="description" class="form-control" rows="5" placeholder="Nhập mô tả sản phẩm..."></textarea>
+                                <textarea name="description" class="form-control" rows="5" placeholder="Nhập mô tả sản phẩm...">{{ old('description') }}</textarea>
                             </div>
                         </div>
                         <!-- Cột Upload Ảnh -->

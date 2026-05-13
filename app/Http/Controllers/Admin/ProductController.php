@@ -9,7 +9,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = \App\Models\Product::with('category')->latest()->paginate(10);
+        $products = \App\Models\Product::with('category')->latest()->get();
         $categories = \App\Models\Category::all();
         return view('admin.products.index', compact('products', 'categories'));
     }
@@ -21,15 +21,18 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
-            'description' => 'required|string',
-            'image' => 'required|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
+            'description' => 'nullable|string',
+            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
         $data = $request->except('image');
+        $data['description'] = $data['description'] ?? '';
         
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('products', 'public');
             $data['image'] = '/storage/' . $path;
+        } else {
+            $data['image'] = 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=400&fit=crop';
         }
 
         \App\Models\Product::create($data);
@@ -44,7 +47,7 @@ class ProductController extends Controller
             'category_id' => 'required|exists:categories,id',
             'price' => 'required|numeric|min:0',
             'quantity' => 'required|integer|min:0',
-            'description' => 'required|string',
+            'description' => 'nullable|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif,webp|max:2048',
         ]);
 
