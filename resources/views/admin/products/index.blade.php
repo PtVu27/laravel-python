@@ -70,6 +70,45 @@
             </tbody>
         </table>
     </div>
+    @if($products->hasPages())
+    <div class="card-footer bg-transparent border-top d-flex justify-content-between align-items-center px-4 py-3">
+        <span class="text-secondary small">
+            Hiển thị {{ $products->firstItem() }}–{{ $products->lastItem() }} / {{ $products->total() }} sản phẩm
+        </span>
+        <nav>
+            <ul class="pagination pagination-sm mb-0 gap-1">
+                {{-- Previous --}}
+                @if($products->onFirstPage())
+                    <li class="page-item disabled">
+                        <span class="page-link border-0 rounded-2 bg-light text-muted px-3">&laquo; Trước</span>
+                    </li>
+                @else
+                    <li class="page-item">
+                        <a class="page-link border-0 rounded-2 bg-light text-dark px-3" href="{{ $products->previousPageUrl() }}">&laquo; Trước</a>
+                    </li>
+                @endif
+
+                {{-- Page Numbers --}}
+                @foreach($products->getUrlRange(1, $products->lastPage()) as $page => $url)
+                    <li class="page-item {{ $page == $products->currentPage() ? 'active' : '' }}">
+                        <a class="page-link border-0 rounded-2 {{ $page == $products->currentPage() ? 'bg-primary text-white' : 'bg-light text-dark' }} px-3" href="{{ $url }}">{{ $page }}</a>
+                    </li>
+                @endforeach
+
+                {{-- Next --}}
+                @if($products->hasMorePages())
+                    <li class="page-item">
+                        <a class="page-link border-0 rounded-2 bg-light text-dark px-3" href="{{ $products->nextPageUrl() }}">Sau &raquo;</a>
+                    </li>
+                @else
+                    <li class="page-item disabled">
+                        <span class="page-link border-0 rounded-2 bg-light text-muted px-3">Sau &raquo;</span>
+                    </li>
+                @endif
+            </ul>
+        </nav>
+    </div>
+    @endif
 </div>
 
 <!-- Modal Thêm/Sửa Sản Phẩm -->

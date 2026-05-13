@@ -9,7 +9,7 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = \App\Models\Product::with('category')->latest()->get();
+        $products = \App\Models\Product::with('category')->latest()->paginate(10);
         $categories = \App\Models\Category::all();
         return view('admin.products.index', compact('products', 'categories'));
     }
