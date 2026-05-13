@@ -10,6 +10,7 @@ return new class extends Migration
     {
         Schema::table('products', function (Blueprint $table) {
             $table->longText('image')->nullable()->change();
+            $table->text('description')->nullable()->change();
         });
     }
 
