@@ -29,10 +29,12 @@ class ProductController extends Controller
         $data['description'] = $data['description'] ?? '';
         
         if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('products', 'public');
-            $data['image'] = '/storage/' . $path;
+            $file = $request->file('image');
+            $mime = $file->getMimeType();
+            $base64 = base64_encode(file_get_contents($file->getRealPath()));
+            $data['image'] = "data:{$mime};base64,{$base64}";
         } else {
-            $data['image'] = 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=400&h=400&fit=crop';
+            $data['image'] = 'https://ui-avatars.com/api/?name=' . urlencode($request->name) . '&size=400&background=e8f0fe&color=4285f4';
         }
 
         \App\Models\Product::create($data);
@@ -54,11 +56,10 @@ class ProductController extends Controller
         $data = $request->except('image');
         
         if ($request->hasFile('image')) {
-            if ($product->image && file_exists(public_path($product->image))) {
-                @unlink(public_path($product->image));
-            }
-            $path = $request->file('image')->store('products', 'public');
-            $data['image'] = '/storage/' . $path;
+            $file = $request->file('image');
+            $mime = $file->getMimeType();
+            $base64 = base64_encode(file_get_contents($file->getRealPath()));
+            $data['image'] = "data:{$mime};base64,{$base64}";
         }
 
         $product->update($data);
@@ -68,9 +69,6 @@ class ProductController extends Controller
 
     public function destroy(\App\Models\Product $product)
     {
-        if ($product->image && file_exists(public_path($product->image))) {
-            @unlink(public_path($product->image));
-        }
         $product->delete();
         return redirect()->route('admin.products.index')->with('success', 'Xóa sản phẩm thành công!');
     }
