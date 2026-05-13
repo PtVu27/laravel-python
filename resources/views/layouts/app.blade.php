@@ -321,28 +321,28 @@
                     $popupData = [
                         'title' => 'Sức Mạnh & Tốc Độ!',
                         'text' => 'Chào chàng trai trẻ, có vẻ bạn thích lối chơi tấn công. Khám phá ngay dòng Vợt Pickleball Tấn Công mới nhất của chúng tôi!',
-                        'img' => 'https://pickleball.vn/wp-content/uploads/2023/10/vot-pickleball-joola-ben-johns-perseus-cfs-16-1.jpg',
+                        'img' => 'https://images.unsplash.com/photo-1554068865-24cecd4e34b8?w=200&h=200&fit=crop',
                         'link' => route('categories.index')
                     ];
                 } elseif($user->gender == 'female' && $age <= 25) {
                     $popupData = [
                         'title' => 'Phong Cách & Kiểm Soát!',
                         'text' => 'Chào cô gái năng động, thiết kế nổi bật cùng khả năng kiểm soát bóng đỉnh cao là dành cho bạn. Xem ngay Vợt Pickleball Kiểm Soát!',
-                        'img' => 'https://pickleball.vn/wp-content/uploads/2024/05/Vot-Pickleball-Joola-Simone-Jardim-Hyperion-C2-CFS-14-1.webp',
+                        'img' => 'https://images.unsplash.com/photo-1587280501635-68a0e82cd5ff?w=200&h=200&fit=crop',
                         'link' => route('categories.index')
                     ];
                 } elseif($user->gender == 'male' && $age > 25) {
                     $popupData = [
                         'title' => 'Bảo Vệ & Bền Bỉ!',
                         'text' => 'Sự thoải mái và bảo vệ cơ thể là ưu tiên hàng đầu. Nâng cấp trải nghiệm với dòng Giày thể thao Pickleball chuyên dụng.',
-                        'img' => 'https://pickleball.vn/wp-content/uploads/2024/06/giay-pickleball-babolat-jet-mach-3-all-court-men-1.jpg',
+                        'img' => 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200&h=200&fit=crop',
                         'link' => route('categories.index')
                     ];
                 } elseif($user->gender == 'female' && $age > 25) {
                     $popupData = [
                         'title' => 'Thời Trang & Tiện Dụng!',
                         'text' => 'Đừng quên trang bị những phụ kiện thời trang và tiện lợi nhất cho mỗi trận đấu của bạn. Xem ngay Phụ Kiện Pickleball!',
-                        'img' => 'https://pickleball.vn/wp-content/uploads/2024/05/Tui-Pickleball-Joola-Tour-Elite-Bag-Trang-1.webp',
+                        'img' => 'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=200&h=200&fit=crop',
                         'link' => route('categories.index')
                     ];
                 }
